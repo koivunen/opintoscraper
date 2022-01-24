@@ -113,10 +113,18 @@ def processApplication(application):
     assert application_details.status_code == 200
 
     application_details = application_details.json()
+    filtered_attachments=[]
+    for oid, val in application_details['attachment-reviews'].items():
+        if oid in TARGET_OIDS:
+            filtered_attachments+=list(val.keys())
+
     for answer in application_details["application"]["answers"]:
         if answer["fieldType"] != "attachment":
             continue
         key = answer["key"]
+        if key not in filtered_attachments:
+            print("filtered",key)
+            continue
 
         values = answer["value"]
         # sometimes it's a list of strings, sometimes a list of lists
