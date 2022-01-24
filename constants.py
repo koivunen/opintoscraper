@@ -103,3 +103,6 @@ LIST_URL_QUERY={
     },
     "hakukohde-oid": "1.2.246.562.20.00000000000000002301"
 }
+
+#TODO: hakukohderyhma-oid: "1.2.246.562.28.65534771657"  yliopisto, 1. yhteishaun matlu + tek + biomedical 2022?
+#      haku-oid: "1.2.246.562.29.00000000000000002175"     ?????????????
