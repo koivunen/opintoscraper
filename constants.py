@@ -2,8 +2,9 @@ LIST_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/applications/li
 APPLICATION_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/applications/{oid}"
 ME_INFO_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/user-info"
 METADATA_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/files/metadata"
-FILE_DOWNLOAD_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/files/content/{0}"
+FILE_DOWNLOAD_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/files/content/{file_guid}"
 ME2_INFO_URL="https://virkailija.opintopolku.fi/kayttooikeus-service/cas/me"
+OUTPUT_PATH="output"
 
 TARGET_OIDS = {
     "1.2.246.562.20.00000000000000002202": "biomed",
