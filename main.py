@@ -109,11 +109,25 @@ def downloadFileTo(file_guid, target_folder):
         attachment_file.headers["Content-Disposition"])[1]["filename"]
     path = (target_folder / filename)
     opath=path
-    if path.exists():
+
+    # Check existing and create if not
+    exists=None
+    try:
+        with path.open("xb") as f:
+            exists=False
+    except FileExistsError as e:
+        exists=True
+
+    if exists:
         for i in range(99999):
             path = opath.with_stem(opath.stem + "_n" + str(i))
-            if not path.exists():
-                break
+
+            # avoid race condition by create-opening exclusively (error if already existing)
+            try:
+                with path.open("xb") as f:
+                    break
+            except FileExistsError as e:
+                continue
 
     with path.open("wb") as f:
         for chunk in attachment_file.iter_content(chunk_size=8192):
