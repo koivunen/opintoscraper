@@ -5,6 +5,11 @@ METADATA_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/files/metad
 FILE_DOWNLOAD_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/files/content/{file_guid}"
 ME2_INFO_URL="https://virkailija.opintopolku.fi/kayttooikeus-service/cas/me"
 OUTPUT_PATH="output"
+DATABASE_PATH="database"
+
+#Testing
+#OUTPUT_PATH="output_delme"
+#DATABASE_PATH="database_delme"
 
 TARGET_OIDS = {
     "1.2.246.562.20.00000000000000002202": "biomed",

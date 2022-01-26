@@ -17,7 +17,10 @@ from concurrent import futures
 import filecmp
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
-
+import threading
+import queue
+import hashlib
+applications_queue = queue.Queue(4)
 retries = Retry(total=5, backoff_factor=1)
 
 import http.client as http_client
@@ -34,7 +37,7 @@ requests_log.propagate = True
 
 ## Application database
 
-db = shelve.open('database')
+db = shelve.open(DATABASE_PATH)
 
 
 def hasDownloadedApplication(oid):
@@ -87,36 +90,49 @@ while not testLoggedIn():
     )
     rebuildCookies()
 
+import time
+bad_login = threading.Event()
+good_login = threading.Event()
+good_login.set()
+
+
+def doBadLoginAndWaitForGood():
+    print("[Worker] Detected a likely login failure, waiting for login")
+    if not bad_login.is_set():
+        good_login.clear()
+        bad_login.set()
+    good_login.wait()
+    print("resuming after good login...")
+
 
 def downloadFileTo(file_guid, target_folder):
+    good_login.wait()
     assert isinstance(file_guid, str)
     url = FILE_DOWNLOAD_URL.format(file_guid=file_guid)
 
     #oid=application["person"]["oid"]
     attachment_file = session.get(url, headers=generateHeader())
     if attachment_file.status_code == 401:
-        input("relogin and press enter")
-        rebuildCookies()
+        doBadLoginAndWaitForGood()
         attachment_file = session.get(url, headers=generateHeader())
     elif attachment_file.status_code == 404:
         if not testLoggedIn():
-            input("relogin and press enter")
-            rebuildCookies()
+            doBadLoginAndWaitForGood()
             attachment_file = session.get(url, headers=generateHeader())
-        return (file_guid,False)
+        return (file_guid, False)
     assert attachment_file.status_code == 200
     filename = cgi.parse_header(
         attachment_file.headers["Content-Disposition"])[1]["filename"]
     path = (target_folder / filename)
-    opath=path
+    opath = path
 
     # Check existing and create if not
-    exists=None
+    exists = None
     try:
         with path.open("xb") as f:
-            exists=False
+            exists = False
     except FileExistsError as e:
-        exists=True
+        exists = True
 
     if exists:
         for i in range(99999):
@@ -129,19 +145,48 @@ def downloadFileTo(file_guid, target_folder):
             except FileExistsError as e:
                 continue
 
+    sha1 = hashlib.sha1()
+        
     with path.open("wb") as f:
         for chunk in attachment_file.iter_content(chunk_size=8192):
             f.write(chunk)
-    if path!=opath and filecmp.cmp(path,opath):
+            sha1.update(chunk) 
+
+    # TODO: Non-fatal race condition (dedupe.py takes care of)
+    if path != opath and filecmp.cmp(path, opath):
         path.unlink()
-        print("\t",path,"is dupe to",opath,"removing")
-        path=opath
+        print("\t", path, "is dupe of", opath, " (removing)")
+        path = opath
         #TODO: compare all "revision"
 
-    return (file_guid,path)
+    return (file_guid, path,sha1.digest())
 
 
 oid_processed = {}
+
+
+def askRebuild():
+    input("Likely logged out. Press enter to continue after logging in.")
+    rebuildCookies()
+    print("Rebuilt cookies...")
+
+
+def pushApplicationQueueData(payload):
+    while True:
+        if bad_login.is_set():
+            print("Got bad login flag, checking")
+            if testLoggedIn():
+                print("We are logged in, clearing")
+                bad_login.clear()
+                good_login.set()
+            else:
+                askRebuild()
+        try:
+            applications_queue.put(payload, True, 5)
+            break
+        except queue.Full as e:
+            if not testLoggedIn():
+                askRebuild()
 
 
 def processApplication(application):
@@ -164,16 +209,11 @@ def processApplication(application):
     #if person_path.exists():
 
     if hasDownloadedApplication(oid):
-        print("\nAlready processed", folder_name)
+        print("Already processed", folder_name)
         return
     else:
-        print("\nProcessing", folder_name)
+        print("Queued", folder_name)
     person_path.mkdir(exist_ok=True)
-
-    #with (person_path/"info.txt").open("w") as f:
-    #    f.write(application["person"]["last-name"])
-    #    f.write("\n")
-    #    f.write(application["person"]["preferred-name"])
 
     target_path = (person_path)
     Path(target_path).mkdir(exist_ok=True, parents=True)
@@ -188,19 +228,26 @@ def processApplication(application):
         application_details = session.get(url, headers=generateHeader())
 
     assert application_details.status_code == 200
-
     application_details = application_details.json()
+    data = (application_oid, application_details, target_path, person_path)
+    pushApplicationQueueData(data)
+
+
+# Downloading applications takes a while so use a queue
+def processApplicationPost(data):
+    application_oid, application_details, target_path, person_path = data
+    print("Processing", person_path)
     filtered_attachments = []
     for oid, val in application_details['attachment-reviews'].items():
         if oid in TARGET_OIDS:
             filtered_attachments += list(val.keys())
-    no_failed_downloads=True
+    no_failed_downloads = True
     for answer in application_details["application"]["answers"]:
         if answer["fieldType"] != "attachment":
             continue
         key = answer["key"]
         if key not in filtered_attachments:
-            print("\t", "filtered", key, "for", person_path,"(not needed)")
+            print("\t", "filtered", key, "for", person_path, "(not needed)")
             continue
 
         values = answer["value"]
@@ -215,19 +262,36 @@ def processApplication(application):
 
                 downloadables.append(attachment_file_guid)
 
+        # Remove potential duplicates
+        olen = len(downloadables)
+        downloadables = sorted((set(downloadables)))
+        nlen = len(downloadables)
+        if olen != nlen:
+            print("Reduced downloadables", olen, "->", nlen)
         with futures.ThreadPoolExecutor(max_workers=5) as executor:
             res = executor.map(lambda x: downloadFileTo(x, target_path),
                                downloadables)
-            for (guid,filepath) in res:
+            for (guid, filepath) in res:
                 if not filepath:
-                    no_failed_downloads=False
-                    print("\tCould not download",guid)
+                    no_failed_downloads = False
+                    print("\tCould not download", guid)
                 else:
                     print("\tDownloaded", filepath)
     if no_failed_downloads:
         markAsDownloaded(application_oid)
     else:
-        print("Unable to complete",application_oid)
+        print("Unable to complete", application_oid)
+
+
+def applicationProcessor():
+    while True:
+        data = applications_queue.get()
+        if data == False:
+            break
+        processApplicationPost(data)
+
+
+app_proc = threading.Thread(target=applicationProcessor, daemon=True).start()
 
 # Iterate over application targets (?)
 for oid, oid_folder_name in TARGET_OIDS.items():
@@ -248,5 +312,9 @@ for oid, oid_folder_name in TARGET_OIDS.items():
           len(applications_list["applications"]))
     for application in applications_list["applications"]:
         processApplication(application)
+
+applications_queue.put(False)
+print("Waiting for finishing...")
+app_proc.join()
 
 print("Processing finished!")
