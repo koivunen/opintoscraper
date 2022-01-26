@@ -42,6 +42,8 @@ A web scraper for application attachments from https://virkailija.opintopolku.fi
 ## Misc
 Likely the correct documentation path for a PROPER API: https://wiki.eduuni.fi/display/ophpolku/Hakeneet+ja+paikan+vastaanottaneet+%28kk%29+v4
 
+We are likely interfacing with the api that https://github.com/Opetushallitus/ataru creates/uses.
+
 Also check (api complains if you don't give caller-id):
 https://github.com/Opetushallitus/dokumentaatio/blob/master/http.md
 
