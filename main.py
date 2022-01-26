@@ -209,10 +209,10 @@ def processApplication(application):
     #if person_path.exists():
 
     if hasDownloadedApplication(oid):
-        print("Already processed", folder_name)
+        print("Already processed: ", folder_name)
         return
     else:
-        print("Queued", folder_name)
+        print("Queued: ", folder_name)
     person_path.mkdir(exist_ok=True)
 
     target_path = (person_path)
@@ -291,7 +291,8 @@ def applicationProcessor():
         processApplicationPost(data)
 
 
-app_proc = threading.Thread(target=applicationProcessor, daemon=True).start()
+app_proc = threading.Thread(target=applicationProcessor, daemon=True)
+app_proc.start()
 
 # Iterate over application targets (?)
 for oid, oid_folder_name in TARGET_OIDS.items():

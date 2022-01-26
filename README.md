@@ -36,6 +36,8 @@ A web scraper for application attachments from https://virkailija.opintopolku.fi
  - Does not use official APIs.
  - not configurable output target format (for example per-program folder for attachments)
  - Parallel application fetching (instead of just downloading) for a speedup of about 1 hour for 1000 applications (currently takes about 5 hours)
+ - Proper logging
+ - Download only changed since X (and list changed folders)
 
 ## Misc
 Likely the correct documentation path for a PROPER API: https://wiki.eduuni.fi/display/ophpolku/Hakeneet+ja+paikan+vastaanottaneet+%28kk%29+v4
