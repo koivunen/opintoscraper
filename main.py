@@ -1,3 +1,4 @@
+from timeit import repeat
 import requests
 from constants import *
 import browser_cookie3
@@ -13,13 +14,24 @@ output_path.mkdir(exist_ok=True)
 import cgi
 import shelve
 db=shelve.open('database')
+from concurrent import futures
 
-# Folder path plan:
+
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
+
+
+retries = Retry(total=5, backoff_factor=1)
+
+
+# OLD Folder path plan:
 # output/matti_meikalainen/kokkikoulu/hygienia.pdf
 # output/matti_meikalainen/kokkikoulu/passi.pdf
 # output/matti_meikalainen/koodikoulu/atkajokortti.pdf
 # output/matti_meikalainen/koodikoulu/passi.pdf
 # output/matti_meikalainen/oid.lnk ?
+# new
+# output/matti/passi.pdf
 
 # These two lines enable debugging at httplib level (requests->urllib3->http.client)
 # You will see the REQUEST, including HEADERS and DATA, and RESPONSE with HEADERS but without DATA.
@@ -38,10 +50,16 @@ if DEBUG:
     requests_log.setLevel(logging.DEBUG)
 requests_log.propagate = True
 
+# Common session used to store cookies, also with retry
 session = requests.Session()
-cookies = browser_cookie3.edge()  #browser_cookies = browser_cookie3.load()
-session.cookies = cookies
+session.mount('http://', HTTPAdapter(max_retries=retries))
+session.mount('https://', HTTPAdapter(max_retries=retries))
 
+def rebuildCookies():
+    cookies = browser_cookie3.edge()  #browser_cookies = browser_cookie3.load()
+    session.cookies = cookies
+
+rebuildCookies()
 
 def getCSRF():
     return session.cookies._cookies[".opintopolku.fi"]["/"]["CSRF"].value
@@ -55,25 +73,43 @@ def generateHeader():
         "caller-id": "requestscraper-utu-tech-lamkoiatutufi"
     }
 
+def testLoggedIn():
+    # Test if logged in
+    try:
+        infotest = session.get(ME2_INFO_URL)
+    except:
+        return False
+    return infotest.status_code==200
+while not testLoggedIn():
+    input("Could not login to https://virkailija.opintopolku.fi/ . Try logging in with a browser (microsoft edge) and press enter.")
+    rebuildCookies()
+
 
 def downloadFileTo(file_guid, target_folder):
     assert isinstance(file_guid, str)
     url = FILE_DOWNLOAD_URL.format(file_guid=file_guid)
-    headers = generateHeader()
 
     #oid=application["person"]["oid"]
+    attachment_file = session.get(url, headers=generateHeader())
+    if attachment_file.status_code == 401:
+        input("relogin and press enter")
+        rebuildCookies()
+        attachment_file = session.get(url, headers=generateHeader())
+    elif attachment_file.status_code == 404:
+        if not testLoggedIn():
+            input("relogin and press enter")
+            rebuildCookies()
+            attachment_file = session.get(url, headers=generateHeader())
 
-    attachment_file = session.get(url, headers=headers)
-    attachment_file.raise_for_status()
     assert attachment_file.status_code == 200
     filename = cgi.parse_header(
         attachment_file.headers["Content-Disposition"])[1]["filename"]
     path=(target_folder / filename)
-    print(path)
+    
     if path.exists():
         opath=path
         for i in range(99999):
-            path=opath.with_stem(opath.stem+"_"+str(i))
+            path=opath.with_stem(opath.stem+"_n"+str(i))
             if not path.exists():
                 break
 
@@ -84,7 +120,7 @@ def downloadFileTo(file_guid, target_folder):
 
 oid_processed={}
 def processApplication(application):
-    headers = generateHeader()
+    
     #oid=application["person"]["oid"]
     oid = application["key"]
     if oid_processed.get(oid):
@@ -94,8 +130,12 @@ def processApplication(application):
     oid_processed[oid]=True
     
     folder_name = "{0}_{1}_{2}".format(application["person"]["last-name"],application["person"]["preferred-name"],application["person"]["oid"])
-
     person_path = output_path / folder_name
+    if person_path.exists():
+        print("\nSkip",folder_name)
+        return
+    else:
+        print("\nProcessing",folder_name)
     person_path.mkdir(exist_ok=True)
 
     #with (person_path/"info.txt").open("w") as f:
@@ -105,10 +145,15 @@ def processApplication(application):
 
     target_path = (person_path)
     Path(target_path).mkdir(exist_ok=True,parents=True)
-
+    
     # details not in list, such as attachment info
     url = APPLICATION_URL.format(oid=oid)
-    application_details = session.get(url, headers=headers)
+    application_details = session.get(url, headers=generateHeader())
+
+    if application_details.status_code == 401:
+        input("relogin and press enter")
+        rebuildCookies()
+        application_details = session.get(url, headers=generateHeader())
 
     assert application_details.status_code == 200
 
@@ -123,11 +168,12 @@ def processApplication(application):
             continue
         key = answer["key"]
         if key not in filtered_attachments:
-            print("filtered",key)
+            print("\t","filtered",key,"for",person_path)
             continue
 
         values = answer["value"]
         # sometimes it's a list of strings, sometimes a list of lists
+        downloadables=[]
         for attachment_file_guids in values or []:
 
             # sometimes it's a list, sometimes a string (but why?)
@@ -135,27 +181,20 @@ def processApplication(application):
                 attachment_file_guids=[attachment_file_guids]
             for attachment_file_guid in attachment_file_guids or []:
 
-                downloadFileTo(attachment_file_guid, target_path)
-
-# Test if logged in and get csrf
-try:
-    infotest = session.get(ME2_INFO_URL)
-    csrf = cookies._cookies[".opintopolku.fi"]["/"]["CSRF"].value
-    #print("csrf=",csrf)
-    #    code.interact(local = locals())
-    #print(infotest.json())
-except:
-    print()
-    raise
+                downloadables.append(attachment_file_guid)
+                
+        with futures.ThreadPoolExecutor(max_workers=5) as executor:
+            res = executor.map(lambda x: downloadFileTo(x,target_path),downloadables)
+            for r in res:
+                print("\tDownloaded",r)
 
 # Iterate over application targets (?)
 for oid, oid_folder_name in TARGET_OIDS.items():
     print("\nRequesting", oid_folder_name)
     query = deepcopy(LIST_URL_QUERY)
     query["hakukohde-oid"] = oid
-    headers = generateHeader()
 
-    applications_list = session.post(LIST_URL, json=query, headers=headers)
+    applications_list = session.post(LIST_URL, json=query, headers=generateHeader())
 
     assert applications_list.status_code == 200
 

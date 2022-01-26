@@ -10,7 +10,7 @@ import hashlib
 
 
 def dedupeSubfolders(path):
-    global_hashes=[]
+    global_hashes={}
     for folder in path.iterdir():
         if not folder.is_dir():
             continue
@@ -32,10 +32,10 @@ def dedupeSubfolders(path):
                 hashes.append(digest)
 
         for h in hashes:
-            if h in global_hashes:
-                print("wtf?",folder)
+            if global_hashes.get(h):
+                print("crossdupe?",folder,global_hashes.get(h))
             else:
-                global_hashes.append(h)
+                global_hashes[h]=folder
 
 if __name__ == '__main__':
     output_path = Path(OUTPUT_PATH)
