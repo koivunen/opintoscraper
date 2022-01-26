@@ -271,7 +271,7 @@ def processApplicationPost(data):
         with futures.ThreadPoolExecutor(max_workers=5) as executor:
             res = executor.map(lambda x: downloadFileTo(x, target_path),
                                downloadables)
-            for (guid, filepath) in res:
+            for (guid, filepath, checksum) in res:
                 if not filepath:
                     no_failed_downloads = False
                     print("\tCould not download", guid)
