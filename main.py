@@ -103,7 +103,7 @@ def downloadFileTo(file_guid, target_folder):
             input("relogin and press enter")
             rebuildCookies()
             attachment_file = session.get(url, headers=generateHeader())
-
+        return (file_guid,False)
     assert attachment_file.status_code == 200
     filename = cgi.parse_header(
         attachment_file.headers["Content-Disposition"])[1]["filename"]
@@ -120,11 +120,11 @@ def downloadFileTo(file_guid, target_folder):
             f.write(chunk)
     if path!=opath and filecmp.cmp(path,opath):
         path.unlink()
-        print("\t\t","^ is dupe to",opath,"removing")
+        print("\t",path,"is dupe to",opath,"removing")
         path=opath
         #TODO: compare all "revision"
 
-    return path
+    return (file_guid,path)
 
 
 oid_processed = {}
@@ -180,13 +180,13 @@ def processApplication(application):
     for oid, val in application_details['attachment-reviews'].items():
         if oid in TARGET_OIDS:
             filtered_attachments += list(val.keys())
-
+    no_failed_downloads=True
     for answer in application_details["application"]["answers"]:
         if answer["fieldType"] != "attachment":
             continue
         key = answer["key"]
         if key not in filtered_attachments:
-            print("\t", "filtered", key, "for", person_path)
+            print("\t", "filtered", key, "for", person_path,"(not needed)")
             continue
 
         values = answer["value"]
@@ -204,10 +204,16 @@ def processApplication(application):
         with futures.ThreadPoolExecutor(max_workers=5) as executor:
             res = executor.map(lambda x: downloadFileTo(x, target_path),
                                downloadables)
-            for r in res:
-                print("\tDownloaded", r)
-    markAsDownloaded(application_oid)
-
+            for (guid,filepath) in res:
+                if not filepath:
+                    no_failed_downloads=False
+                    print("\tCould not download",guid)
+                else:
+                    print("\tDownloaded", filepath)
+    if no_failed_downloads:
+        markAsDownloaded(application_oid)
+    else:
+        print("Unable to complete",application_oid)
 
 # Iterate over application targets (?)
 for oid, oid_folder_name in TARGET_OIDS.items():

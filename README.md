@@ -1,23 +1,24 @@
 # opintoscraper
 
-A web scraper for the attachments from https://virkailija.opintopolku.fi/lomake-editori/ for mass processing of up to thousands of applications. This process is not officially supported and may break at any moment, you have been warned.
+A web scraper for application attachments from https://virkailija.opintopolku.fi/lomake-editori/ for mass processing of up to thousands of applications/applicants. This process is not officially supported and may break at any moment, you have been warned.
 
 ### Requirements
 
- - Microsoft edge or a browser
- - Python 3.9
+ - Microsoft edge or a browser that is supported by https://github.com/borisbabic/browser_cookie3
+ - Python 3.9+
  - Programming experience (for now)
 
 ### Usage
 
- - Install dependencies from requirements.txt (`pip instal -r requirements.txt`)
- - Set up target program IDs in `constants.py` (program groups are not supported yet!)
- - Login to [https://virkailija.opintopolku.fi/](https://virkailija.opintopolku.fi/) in Microsoft Edge.
+ - Install dependencies from requirements.txt (`pip install -r requirements.txt`)
+ - Set up target program IDs in `constants.py` (program groups are not supported yet!) as seen in opintopolku.
+ - Login to [https://virkailija.opintopolku.fi/](https://virkailija.opintopolku.fi/) in Microsoft Edge before the next step.
  - Run `main.py` and watch for the process to fail or finish. 
     - You may be logged out of opintopolku in the middle in which case you need to login back with edge and press enter. The program will prompt you for this.
    - On failure: you may need to rerun the program in which case it skips every application already dowloaded based on the `database` file next to main.py
- - After mass download, run `dedupe.py` to remove duplicate application files with different filenames and 
- - Rename/remove `database*` files to reinitialize the downloader
+ - After mass download, run `dedupe.py` to remove duplicate application files with different filenames  
+ - Rename/remove `database*` files to reinitialize the downloader!
+   - The database stores application ids that have already been processed
 
 
 ### Default output format description
