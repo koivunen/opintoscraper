@@ -32,6 +32,7 @@ A web scraper for application attachments from https://virkailija.opintopolku.fi
 ### TODO / issues / Help wanted
 
  - No GUI
+ - Official API
  - no easy way to use/configure 
  - Does not use official APIs.
  - not configurable output target format (for example per-program folder for attachments)
@@ -53,6 +54,7 @@ https://wiki.eduuni.fi/display/ophoppija/Hakemuspalvelun+REST+API
 
 https://virkailija.opintopolku.fi/suoritusrekisteri/swagger/index.html#/kkhakijat/haeKkHakijat
 
-https://koski.opintopolku.fi/koski/dokumentaatio/koodisto/oppiainematematiikka/latest
+https://opintopolku.fi/konfo-backend/swagger/index.html
 
-https://koski.opintopolku.fi/koski/dokumentaatio
+https://wiki.eduuni.fi/display/ophpolku/Hakeneet+ja+paikan+vastaanottaneet+%28kk%29+v4
+
