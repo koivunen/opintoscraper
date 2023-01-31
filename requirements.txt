@@ -1,2 +1,8 @@
 requests
 browser-cookie3
+pathvalidate
+selenium
+openpyxl
+coloredlogs
+portalocker
+systemd-python
