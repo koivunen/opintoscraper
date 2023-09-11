@@ -40,7 +40,11 @@ A web scraper for application attachments from https://virkailija.opintopolku.fi
  - Download only changed since X (and list changed folders)
 
 ## Misc
-Likely the correct documentation path for a PROPER API: https://wiki.eduuni.fi/display/ophpolku/Hakeneet+ja+paikan+vastaanottaneet+%28kk%29+v4
+- Likely the correct documentation for the API: https://wiki.eduuni.fi/display/ophpolku/Hakemuspalvelun+Siirto-API
+- The internal API used by us is likely the same; the only differences seem to be in authentication
+
+
+Also worth checking: https://wiki.eduuni.fi/display/ophpolku/Hakeneet+ja+paikan+vastaanottaneet+%28kk%29+v4
 
 Also check (api complains if you don't give caller-id):
 https://github.com/Opetushallitus/dokumentaatio/blob/master/http.md
