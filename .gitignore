@@ -160,3 +160,9 @@ cython_debug/
 /database_*.dat
 /database_*.bak
 /database_*.dir
+test.png
+.gitignore
+test2
+applicants_template.xlsx
+delme
+test.pdf

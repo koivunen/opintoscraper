@@ -4,31 +4,46 @@ ME_INFO_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/user-info"
 METADATA_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/files/metadata"
 FILE_DOWNLOAD_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/files/content/{file_guid}"
 ME2_INFO_URL="https://virkailija.opintopolku.fi/kayttooikeus-service/cas/me"
-OUTPUT_PATH="output"
-DATABASE_PATH="database"
+OUTPUT_PATH="/kvhaku/tmp/output_test/"
+OUTPUT_PATH="/kvhaku/production_samba/kv_23/"
+DATABASE_PATH="/kvhaku/tmp/kv_23_database.cache"
+
+EXCEL_ONLY=False # skip attachment downloading to refresh excel
+DB_ONLY=True
+
+DISABLE_EXCEL=True
 
 #Testing
 #OUTPUT_PATH="output_delme"
 #DATABASE_PATH="database_delme"
 
+# Korkeakoulujen kevään 2023 ensimmäinen yhteishaku
 TARGET_OIDS = {
-    "1.2.246.562.20.00000000000000002202": "biomed",
-    "1.2.246.562.20.00000000000000002276": "biosci",
-    "1.2.246.562.20.00000000000000002301": "food",
-    "1.2.246.562.20.00000000000000002316": "physchem",
-    "1.2.246.562.20.00000000000000002378": "ict",
-    "1.2.246.562.20.00000000000000002599": "health",
-    "1.2.246.562.20.00000000000000002600": "materials",
-    "1.2.246.562.20.00000000000000002601": "mecheng"
+    "1.2.246.562.20.00000000000000019775": "suscity",
+
+    "1.2.246.562.20.00000000000000019471": "biomed",
+    "1.2.246.562.20.00000000000000019472": "physchem",
+    "1.2.246.562.20.00000000000000019473": "food",
+    "1.2.246.562.20.00000000000000019474": "health",
+    "1.2.246.562.20.00000000000000019475": "materials",
+    "1.2.246.562.20.00000000000000019476": "mecheng",
+    "1.2.246.562.20.00000000000000019477": "biosci",
+    "1.2.246.562.20.00000000000000019478": "ict",
 }
 
+#TODO: excel autogen
+#print("\t".join(TARGET_OIDS.values()))
+
+true=True
+false=False
+null=None
 LIST_URL_QUERY={
     "sort": {
         "order-by": "applicant-name",
         "order": "asc"
     },
     "attachment-review-states": {},
-    "option-answers": {},
+    "option-answers": [],
     "states-and-filters": {
         "attachment-states-to-include": [
             "not-checked",
@@ -50,63 +65,69 @@ LIST_URL_QUERY={
         ],
         "filters": {
             "language-requirement": {
-                "unreviewed": True,
-                "fulfilled": True,
-                "unfulfilled": True
+                "unreviewed": true,
+                "fulfilled": true,
+                "unfulfilled": true
             },
             "degree-requirement": {
-                "unreviewed": True,
-                "fulfilled": True,
-                "unfulfilled": True
+                "unreviewed": true,
+                "fulfilled": true,
+                "unfulfilled": true
             },
             "eligibility-set-automatically": {
-                "yes": True,
-                "no": True
+                "yes": true,
+                "no": true
             },
             "only-identified": {
-                "identified": True,
-                "unidentified": True
+                "identified": true,
+                "unidentified": true
             },
             "only-ssn": {
-                "with-ssn": True,
-                "without-ssn": True
+                "with-ssn": true,
+                "without-ssn": true
             },
             "active-status": {
-                "active": True,
-                "passive": False
+                "active": true,
+                "passive": false
             },
             "question-answer-filtering-options": {},
             "eligibility-state": {
-                "unreviewed": True,
-                "eligible": True,
-                "uneligible": True,
-                "conditionally-eligible": True
+                "unreviewed": true,
+                "eligible": true,
+                "uneligible": true,
+                "conditionally-eligible": true
             },
             "attachment-review-states": {},
+            "only-edited-hakutoiveet": {
+                "edited": true,
+                "unedited": true
+            },
             "base-education": {
-                "pohjakoulutus_kk_ulk": True,
-                "pohjakoulutus_lk": True,
-                "pohjakoulutus_amp": True,
-                "pohjakoulutus_kk": True,
-                "pohjakoulutus_amt": True,
-                "pohjakoulutus_ulk": True,
-                "pohjakoulutus_muu": True,
-                "pohjakoulutus_avoin": True,
-                "pohjakoulutus_yo_ammatillinen": True,
-                "pohjakoulutus_am": True,
-                "pohjakoulutus_yo_ulkomainen": True,
-                "pohjakoulutus_yo": True,
-                "pohjakoulutus_yo_kansainvalinen_suomessa": True,
-                "pohjakoulutus_amv": True
+                "pohjakoulutus_kk_ulk": true,
+                "pohjakoulutus_lk": true,
+                "pohjakoulutus_amp": true,
+                "pohjakoulutus_kk": true,
+                "pohjakoulutus_amt": true,
+                "pohjakoulutus_ulk": true,
+                "pohjakoulutus_muu": true,
+                "pohjakoulutus_avoin": true,
+                "pohjakoulutus_yo_ammatillinen": true,
+                "pohjakoulutus_am": true,
+                "pohjakoulutus_yo_ulkomainen": true,
+                "pohjakoulutus_yo": true,
+                "pohjakoulutus_yo_kansainvalinen_suomessa": true,
+                "pohjakoulutus_amv": true
             },
             "payment-obligation": {
-                "unreviewed": True,
-                "obligated": True,
-                "not-obligated": True
+                "unreviewed": true,
+                "obligated": true,
+                "not-obligated": true
             }
-        }
+        },
+        "school-filter": null,
+        "classes-of-school": null
     },
-    "hakukohde-oid": "1.2.246.562.20.00000000000000002301"
+    "hakukohde-oid": "FILL_ME"
 }
 
 #TODO: hakukohderyhma-oid: "1.2.246.562.28.65534771657"  yliopisto, 1. yhteishaun matlu + tek + biomedical 2022?

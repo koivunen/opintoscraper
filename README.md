@@ -2,11 +2,17 @@
 
 A web scraper for application attachments from https://virkailija.opintopolku.fi/lomake-editori/ for mass processing of up to thousands of applications/applicants. This process is not officially supported and may break at any moment, you have been warned.
 
+### Documentation is out of date!
+
+2023 update brings excel sheet generation and scraping applicant form to PDF with the usual attachments (WIP)
+
 ### Requirements
 
- - Microsoft edge or a browser that is supported by https://github.com/borisbabic/browser_cookie3
+ - Linux server (with disk encryption) `/kvhaku`
+ - https://github.com/jlesage/docker-firefox (for login cookies until proper login API is used)
  - Python 3.9+
  - Programming experience (for now)
+ - chromium with selenium (headless)
 
 ### Usage
 
@@ -20,6 +26,9 @@ A web scraper for application attachments from https://virkailija.opintopolku.fi
  - Rename/remove `database*` files to reinitialize the downloader!
    - The database stores application ids that have already been processed
 
+```bash
+docker run -e VNC_PASSWORD=PASSWORDHERE -e SECURE_CONNECTION=1  --name=firefox     -p 5800:5800 -e 'FF_OPEN_URL=https://virkailija.opintopolku.fi/service-provider-app/saml/login/alias/hakasp?redirect=https://virkailija.opintopolku.fi/virkailijan-tyopoyta/authenticate'     -v /kvhaku/firefox:/config:rw     jlesage/firefox
+```
 
 ### Default output format description
 
@@ -32,6 +41,7 @@ A web scraper for application attachments from https://virkailija.opintopolku.fi
 ### TODO / issues / Help wanted
 
  - No GUI
+ - Official API
  - no easy way to use/configure 
  - Does not use official APIs.
  - not configurable output target format (for example per-program folder for attachments)
@@ -46,6 +56,8 @@ A web scraper for application attachments from https://virkailija.opintopolku.fi
 
 Also worth checking: https://wiki.eduuni.fi/display/ophpolku/Hakeneet+ja+paikan+vastaanottaneet+%28kk%29+v4
 
+We are likely interfacing with the api that https://github.com/Opetushallitus/ataru creates/uses.
+
 Also check (api complains if you don't give caller-id):
 https://github.com/Opetushallitus/dokumentaatio/blob/master/http.md
 
@@ -55,6 +67,7 @@ https://wiki.eduuni.fi/display/ophoppija/Hakemuspalvelun+REST+API
 
 https://virkailija.opintopolku.fi/suoritusrekisteri/swagger/index.html#/kkhakijat/haeKkHakijat
 
-https://koski.opintopolku.fi/koski/dokumentaatio/koodisto/oppiainematematiikka/latest
+https://opintopolku.fi/konfo-backend/swagger/index.html
 
-https://koski.opintopolku.fi/koski/dokumentaatio
+https://wiki.eduuni.fi/display/ophpolku/Hakeneet+ja+paikan+vastaanottaneet+%28kk%29+v4
+
