@@ -24,11 +24,11 @@
 
 ## Tunnisteet
 
-haku-oid (haun id)
-hakukohde-oid (hakukohteen id)
-person_oid=application["person"]["oid"] (henkilön id, joskus sama kuin oppijanumero, mutta ei välttämättä?)
-application_oid = application["key"] (
-file_guid = liitetiedoston yksilöivä tunniste
+- haku-oid (haun id)
+- hakukohde-oid (hakukohteen id)
+- person_oid=application["person"]["oid"] (henkilön id, joskus sama kuin oppijanumero, mutta ei välttämättä?)
+- application_oid = application["key"] (
+- file_guid = liitetiedoston yksilöivä tunniste
 
 ## Lomake-editori API
 
