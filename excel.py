@@ -103,7 +103,7 @@ def set_applicant(oid,preferred_name,last_name,path,target_oid_name):
     if not acell.value:
         acell.value='X'
         acell.style = "Hyperlink"
-    acell.hyperlink = '\\\\utu.fi\\taltio\\SCITECH Masters admissions\\att\\kv_23\\' + path
+    acell.hyperlink = '\\\\utu.fi\\taltio\\SCITECH Masters admissions\\att\\kv_24\\' + path
 
 
 if __name__ == "__main__":

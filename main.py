@@ -107,7 +107,7 @@ def getCSRF():
 
 def generate_header():
     return {
-        "csrf": getCSRF(),
+       # "csrf": getCSRF(),
         "origin": "https://virkailija.opintopolku.fi",
         "accept": "application/json",
         "caller-id": "requestscraper-utu-tech-lamkoiatutufi"

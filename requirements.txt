@@ -6,3 +6,5 @@ openpyxl
 coloredlogs
 portalocker
 systemd-python
+selenium-wire
+

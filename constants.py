@@ -5,13 +5,13 @@ METADATA_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/files/metad
 FILE_DOWNLOAD_URL = "https://virkailija.opintopolku.fi/lomake-editori/api/files/content/{file_guid}"
 ME2_INFO_URL="https://virkailija.opintopolku.fi/kayttooikeus-service/cas/me"
 OUTPUT_PATH="/kvhaku/tmp/output_test/"
-OUTPUT_PATH="/kvhaku/production_samba/kv_23/"
-DATABASE_PATH="/kvhaku/tmp/kv_23_database.cache"
+OUTPUT_PATH="/kvhaku/production_samba/kv_24/"
+DATABASE_PATH="/kvhaku/tmp/kv_24_database.cache"
 
-EXCEL_ONLY=False # skip attachment downloading to refresh excel
-DB_ONLY=True
+EXCEL_ONLY=True #False # skip attachment downloading to refresh excel
+DB_ONLY=False
 
-DISABLE_EXCEL=True
+DISABLE_EXCEL=False
 
 #Testing
 #OUTPUT_PATH="output_delme"
@@ -19,16 +19,30 @@ DISABLE_EXCEL=True
 
 # Korkeakoulujen kevään 2023 ensimmäinen yhteishaku
 TARGET_OIDS = {
-    "1.2.246.562.20.00000000000000019775": "suscity",
 
-    "1.2.246.562.20.00000000000000019471": "biomed",
-    "1.2.246.562.20.00000000000000019472": "physchem",
-    "1.2.246.562.20.00000000000000019473": "food",
-    "1.2.246.562.20.00000000000000019474": "health",
-    "1.2.246.562.20.00000000000000019475": "materials",
-    "1.2.246.562.20.00000000000000019476": "mecheng",
-    "1.2.246.562.20.00000000000000019477": "biosci",
-    "1.2.246.562.20.00000000000000019478": "ict",
+"1.2.246.562.20.00000000000000036596": "biosci",
+
+
+"1.2.246.562.20.00000000000000039962": "biomed",
+
+
+"1.2.246.562.20.00000000000000036557": "food",
+
+
+"1.2.246.562.20.00000000000000036591": "mechanical",
+
+
+"1.2.246.562.20.00000000000000036590": "materials",
+
+
+"1.2.246.562.20.00000000000000036613": "exact",
+
+
+"1.2.246.562.20.00000000000000036560": "health",
+
+
+"1.2.246.562.20.00000000000000040351": "it"
+
 }
 
 #TODO: excel autogen
