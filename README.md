@@ -10,25 +10,26 @@ A web scraper for application attachments from https://virkailija.opintopolku.fi
 
  - Linux server (with disk encryption) `/kvhaku`
  - https://github.com/jlesage/docker-firefox (for login cookies until proper login API is used)
- - Python 3.9+
+ - Python 3.11+
  - Programming experience (for now)
  - chromium with selenium (headless)
+   - Min 32GB RAM for 5 parallel printing jobs (memory leak?) 
 
 ### Usage
 
  - Install dependencies from requirements.txt (`pip install -r requirements.txt`)
  - Set up target program IDs in `constants.py` (program groups are not supported yet!) as seen in opintopolku.
- - Login to [https://virkailija.opintopolku.fi/](https://virkailija.opintopolku.fi/) in Microsoft Edge before the next step.
- - Run `main.py` and watch for the process to fail or finish. 
-    - You may be logged out of opintopolku in the middle in which case you need to login back with edge and press enter. The program will prompt you for this.
-   - On failure: you may need to rerun the program in which case it skips every application already dowloaded based on the `database` file next to main.py
- - After mass download, run `dedupe.py` to remove duplicate application files with different filenames  
- - Rename/remove `database*` files to reinitialize the downloader!
-   - The database stores application ids that have already been processed
-
+ - Login to [https://virkailija.opintopolku.fi/](https://virkailija.opintopolku.fi/) using Firefox to steal cookies (TODO use real API)  
 ```bash
 docker run -e VNC_PASSWORD=PASSWORDHERE -e SECURE_CONNECTION=1  --name=firefox     -p 5800:5800 -e 'FF_OPEN_URL=https://virkailija.opintopolku.fi/service-provider-app/saml/login/alias/hakasp?redirect=https://virkailija.opintopolku.fi/virkailijan-tyopoyta/authenticate'     -v /kvhaku/firefox:/config:rw     jlesage/firefox
 ```
+
+ - Run `main.py` and watch for the process to fail or finish. 
+    - You may be logged out of opintopolku in the middle in which case you need to login back with edge and press enter. The program will prompt you for this.
+   - On failure: you may need to rerun the program in which case it skips every application already dowloaded based on the `database` cache file next to main.py
+ - After mass download, run `dedupe.py` to remove duplicate application files with different filenames  (TODO: no longer required?)
+ - Rename/remove `database*` files to reinitialize the downloader!
+   - The database stores application ids that have already been processed
 
 ### Default output format description
 
@@ -40,14 +41,31 @@ docker run -e VNC_PASSWORD=PASSWORDHERE -e SECURE_CONNECTION=1  --name=firefox  
 
 ### TODO / issues / Help wanted
 
- - No GUI
- - Official API
+ - (G)UI for setting up
+ - Use official API
  - no easy way to use/configure 
  - Does not use official APIs.
  - not configurable output target format (for example per-program folder for attachments)
  - Parallel application fetching (instead of just downloading) for a speedup of about 1 hour for 1000 applications (currently takes about 5 hours)
  - Proper logging
  - Download only changed since X (and list changed folders)
+ - `export DBUS_SESSION_BUS_ADDRESS=/dev/null ./browser.py`
+ - Allow marking in excel as rejected and remove attachments folder accordingly
+ - deduping applications support
+ - excel shared workbook
+
+## SECURITY
+
+ - Known PII leak targets: /tmp contains chrome profiles, chrome log files may be elsewhere, cache contains applications
+ - Always encrypt the cache and preferably the whole opintoscraper, for example:  
+```bash
+ cryptsetup luksFormat /dev/nvme1n1p3
+ cryptsetup luksOpen /dev/nvme1n1p3 opintoscraper
+ mkfs.ext4 -L opintoscraperdata /dev/mapper/opintoscraper
+ mount /dev/mapper/opintoscraper /kvhaku/
+```
+ - Always run in a secure environment altogether!
+ - Target folders for downloads should be restricted from people as much as possible and after selection process the files should be archived in a inaccssible place
 
 ## Misc
 - Likely the correct documentation for the API: https://wiki.eduuni.fi/display/ophpolku/Hakemuspalvelun+Siirto-API
