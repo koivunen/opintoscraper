@@ -3,14 +3,22 @@
 # Processes every application from application cache database with chrome, producing a pdf with person-oid's application
 #
 # # TODO
-#
+# 
 # - !!! SINGLE APPLICATION, MULTIPLE PERSONS
 #    - should treat as separate people?
+# - selenium.common.exceptions.WebDriverException
+#   - OOM, maybe something else
+# - Zombie browsers break cookies!
+# - Memory leak! Restart drivers every 10 applicants?
 #
-#
+
 import os
 os.environ["MOZ_HEADLESS"]='1'
-from seleniumwire import webdriver
+
+# WARNING: extreme ram usage and will not decrease
+#from seleniumwire import webdriver
+from selenium import webdriver
+
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.common.print_page_options import PrintOptions
@@ -29,7 +37,7 @@ import portalocker
 import re,shelve
 from systemd.journal import JournalHandler
 OUT_FILE="_virkailija_tulostus.pdf"
-PARALLEL_COUNT=1
+PARALLEL_COUNT=5
 
 import threading
 import queue
@@ -40,7 +48,7 @@ log = logging.getLogger(__name__)
 def init_logging():
     #fh = logging.FileHandler('debug_browser.log')
     fh=JournalHandler()
-
+    
     fh.setLevel(logging.DEBUG)
 
     #formatter = coloredlogs.ColoredFormatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -59,6 +67,7 @@ log.info("Browser logger")
 db_applications = shelve.open(str(Path(constants.DATABASE_PATH).with_suffix(".applications.slf")),flag='r', writeback=False)
 targets={}
 for app_oid,app_info in db_applications.items():
+
     path = Path(app_info["folder"])
     if not path.exists():
         log.error("does not exist?? %s",str(path))
@@ -71,7 +80,7 @@ log.info("Application count: %s",len(targets))
 def process_thread():
     options = webdriver.ChromeOptions()
     options.add_argument("--disable-gpu")
-    options.add_argument('--disable-dev-shm-usage')
+    #options.add_argument('--disable-dev-shm-usage')
     options.add_argument('--headless=new')
     options.add_argument('--no-sandbox')
     options.add_argument("--disable-extensions")
@@ -84,7 +93,7 @@ def process_thread():
     #driver.get("https://virkailija.opintopolku.fi/henkilo-ui/omattiedot")
     import browser_cookie3
     cookie_jar = browser_cookie3.firefox(cookie_file="/kvhaku/firefox/profile/cookies.sqlite")
-
+    
 
     driver.get("https://virkailija.opintopolku.fi")
 
@@ -104,9 +113,9 @@ def process_thread():
 
 
     def saveApplicant(oid,filepath):
-
+        
         #except portalocker.exceptions.LockException as e:
-
+        
         with portalocker.Lock(filepath,mode='ab',fail_when_locked=True) as pdf_fd:
 
             driver.get("https://virkailija.opintopolku.fi/lomake-editori/applications/search?term="+str(oid))
@@ -117,7 +126,7 @@ def process_thread():
                     log.warning("More than one application for %s, skipping guessing!",filepath)
                     return False
                     #elem.click()
-
+                    
             except TimeoutException as e:
                 print(driver.page_source)
                 print("@",driver.current_url)
@@ -135,10 +144,10 @@ def process_thread():
                 except TimeoutException as e:
                     log.error("Application element missing for %s: %s",oid,str(e))
                     return False
-
+                
                 opening_new_application=False
                 for _ in range(5):
-
+                    
                     try:
                         WebDriverWait(driver, 1).until(EC.element_to_be_clickable((By.CSS_SELECTOR, "a#notification-link-form-outdated"))).click()
                         log.info("Switching to newer form version for %s",oid)
@@ -162,12 +171,12 @@ def process_thread():
             except TimeoutException as e:
                 log.error("Application element missing (2) for %s: %s",oid,str(e))
                 return False
-
+            
             data=base64.b64decode(driver.print_page(print_options))
             if len(data)<1024*5:
                 log.error("Invalid filesize for %s, not saving",filepath)
                 return False
-
+            
             pdf_fd.write(data)
             log.debug("Saving %s",filepath)
     try:
@@ -196,7 +205,7 @@ for i in range(PARALLEL_COUNT):
 
     worker = threading.Thread(target=process_thread, daemon=True,name="Application Worker Process "+str(i))
     worker.start()
-
+    
     threads.append(worker)
 
 for oid,path in targets.items():
@@ -234,6 +243,8 @@ for request in driver.requests:
 
 print(driver.page_source)
 print("@",driver.current_url)
-driver.get_screenshot_as_file('test.png')
+driver.get_screenshot_as_file('test.png') 
 """
+
+
 

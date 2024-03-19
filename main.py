@@ -160,7 +160,10 @@ def download_file_to(file_guid, target_folder):
             invalidate_login_wait_for_login()
             attachment_file = session.get(url, headers=generate_header())
         return (file_guid, False)
-    assert attachment_file.status_code == 200
+    if (attachment_file.status_code != 200):
+        print("Unknown download HTTP return: ",attachment_file.status_code)
+        raise RuntimeError("Unhandled HTTP return code")
+
     filename = cgi.parse_header(
         attachment_file.headers["Content-Disposition"])[1]["filename"]
     path = (target_folder / filename)
@@ -234,7 +237,6 @@ def process_application(application,oidshort):
 
     person_oid=application["person"]["oid"]
     application_oid = application["key"]
-
 
     last_name =application["person"]["last-name"]
     preferred_name = application["person"]["preferred-name"]
@@ -372,9 +374,8 @@ for oid, oid_folder_name in TARGET_OIDS.items():
         if applications_list.status_code == 401:
             raise Exception("likely not logged in")
         assert applications_list.status_code == 200
-
+	
         applications_list = applications_list.json()
-
         #assert not applications_list["sort"].get("offset"), "???"
         offset=applications_list["sort"].get("offset")
 

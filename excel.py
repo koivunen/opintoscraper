@@ -20,6 +20,8 @@ FN=str(applicants_file)
 if not applicants_file.exists():
     shutil.copy(applicants_template, applicants_file)
     log.warning("Generated %s",FN)
+else:
+    print("Modify %s",FN)
 
 db_keys={}
 def _build_key_index(sheet):
@@ -42,6 +44,7 @@ def get_worksheet():
         _generate_app_cache()
     return sheet
 def save():
+    log.info("Saving WB")
     if wb:
         wb.save(FN)
         return True
@@ -85,6 +88,7 @@ def set_applicant(oid,preferred_name,last_name,path,target_oid_name):
     new_applicant = not row
     if new_applicant:
         row = get_empty_row()
+        print("empty",row)
     oidcell = ws.cell(row=row,column=key_index("oid"))
 
     if new_applicant:
@@ -103,7 +107,7 @@ def set_applicant(oid,preferred_name,last_name,path,target_oid_name):
     if not acell.value:
         acell.value='X'
         acell.style = "Hyperlink"
-    acell.hyperlink = '\\\\utu.fi\\taltio\\SCITECH Masters admissions\\att\\kv_24\\' + path
+    acell.hyperlink = constants.EXCEL_BASEPATH + path
 
 
 if __name__ == "__main__":
